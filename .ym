@@ -1,0 +1,140 @@
+name: Windows Chrome Remote Desktop by Akshit
+
+on:
+  workflow_dispatch:
+    inputs:
+      crd_auth_code:
+        description: 'Chrome Remote Desktop Code'
+        required: true
+        type: string
+      computer_name:
+        description: 'Computer Name'
+        required: false
+        default: 'GitHub-Windows-Akshit'
+        type: string
+      session_hours:
+        description: 'Session Hours (max 6)'
+        required: false
+        default: '6'
+        type: string
+
+jobs:
+  windows-rdp:
+    runs-on: windows-latest
+    timeout-minutes: 360
+    
+    steps:
+      - name: Step 1 - Checkout Repository by Akshit
+        uses: actions/checkout@v4
+        
+      - name: Step 2 - Display System Info by Akshit
+        run: |
+          Write-Host "==========================================" -ForegroundColor Cyan
+          Write-Host "  Windows RDP Setup by Akshit" -ForegroundColor Green
+          Write-Host "==========================================" -ForegroundColor Cyan
+          systeminfo | findstr /B /C:"OS Name" /C:"OS Version"
+          Write-Host "Computer: $env:COMPUTERNAME"
+          Write-Host "User: $env:USERNAME"
+          Write-Host "Setup by: Akshit"
+        
+      - name: Step 3 - Download Chrome Remote Desktop by Akshit
+        run: |
+          Write-Host "Downloading Chrome Remote Desktop by Akshit..." -ForegroundColor Yellow
+          $url = "https://dl.google.com/chrome-remote-desktop/chromeremotedesktophost.msi"
+          $output = "$env:TEMPcrd.msi"
+          Invoke-WebRequest -Uri $url -OutFile $output -UseBasicParsing
+          Write-Host "Download completed by Akshit" -ForegroundColor Green
+        
+      - name: Step 4 - Install Chrome Remote Desktop by Akshit
+        run: |
+          Write-Host "Installing Chrome Remote Desktop by Akshit..." -ForegroundColor Yellow
+          $installer = "$env:TEMPcrd.msi"
+          $arguments = "/i `"$installer`" /quiet /norestart"
+          Start-Process "msiexec.exe" -ArgumentList $arguments -Wait -NoNewWindow
+          Write-Host "Installation completed by Akshit" -ForegroundColor Green
+          Start-Sleep -Seconds 20
+        
+      - name: Step 5 - Verify Installation by Akshit
+        run: |
+          Write-Host "Verifying installation by Akshit..." -ForegroundColor Yellow
+          $crdPath = "${env:PROGRAMFILES(X86)}GoogleChrome Remote DesktopCurrentVersion
+emoting_start_host.exe"
+          if (Test-Path $crdPath) {
+            Write-Host "Chrome Remote Desktop found by Akshit" -ForegroundColor Green
+            Write-Host "Path: $crdPath"
+          } else {
+            Write-Host "ERROR: Chrome Remote Desktop not found" -ForegroundColor Red
+            exit 1
+          }
+        
+      - name: Step 6 - Start Chrome Remote Desktop by Akshit
+        env:
+          CRD_CODE: ${{ github.event.inputs.crd_auth_code }}
+          COMP_NAME: ${{ github.event.inputs.computer_name }}
+        run: |
+          Write-Host "Starting Chrome Remote Desktop by Akshit..." -ForegroundColor Yellow
+          $crdPath = "${env:PROGRAMFILES(X86)}GoogleChrome Remote DesktopCurrentVersion
+emoting_start_host.exe"
+          $code = $env:CRD_CODE
+          $name = $env:COMP_NAME
+          $redirect = "https://remotedesktop.google.com/_/oauthredirect"
+          
+          Write-Host "Computer Name: $name"
+          Write-Host "Starting host by Akshit..."
+          
+          $arguments = "--code=`"$code`" --redirect-url=`"$redirect`" --name=`"$name`""
+          Start-Process -FilePath $crdPath -ArgumentList $arguments -NoNewWindow -Wait
+          
+          Start-Sleep -Seconds 10
+          Write-Host "Chrome Remote Desktop started by Akshit" -ForegroundColor Green
+        
+      - name: Step 7 - Enable Windows RDP by Akshit
+        run: |
+          Write-Host "Enabling Windows RDP by Akshit..." -ForegroundColor Yellow
+          Set-ItemProperty -Path 'HKLM:SystemCurrentControlSetControlTerminal Server' -Name "fDenyTSConnections" -Value 0
+          Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+          Write-Host "RDP enabled by Akshit" -ForegroundColor Green
+        
+      - name: Step 8 - Display Connection Info by Akshit
+        run: |
+          Write-Host ""
+          Write-Host "==========================================" -ForegroundColor Cyan
+          Write-Host "  CONNECTION INFO - BY AKSHIT" -ForegroundColor Green
+          Write-Host "==========================================" -ForegroundColor Cyan
+          Write-Host ""
+          Write-Host "Chrome Remote Desktop is ACTIVE!" -ForegroundColor Green
+          Write-Host ""
+          Write-Host "Access at: https://remotedesktop.google.com/access" -ForegroundColor Yellow
+          Write-Host "Computer Name: ${{ github.event.inputs.computer_name }}"
+          Write-Host "Session Duration: ${{ github.event.inputs.session_hours }} hours"
+          Write-Host ""
+          Write-Host "Setup completed by: AKSHIT" -ForegroundColor Green
+          Write-Host "==========================================" -ForegroundColor Cyan
+        
+      - name: Step 9 - Keep Session Active by Akshit
+        run: |
+          Write-Host "==========================================" -ForegroundColor Cyan
+          Write-Host "Session Maintenance by Akshit" -ForegroundColor Green
+          Write-Host "==========================================" -ForegroundColor Cyan
+          Write-Host ""
+          Write-Host "Session will run for ${{ github.event.inputs.session_hours }} hours"
+          Write-Host "Maintained by: Akshit"
+          Write-Host ""
+          
+          $duration = [int]"${{ github.event.inputs.session_hours }}" * 60
+          
+          for ($i = 0; $i -lt $duration; $i++) {
+            Start-Sleep -Seconds 60
+            
+            if ($i % 15 -eq 0 -and $i -gt 0) {
+              $elapsed = [math]::Round($i / 60, 2)
+              $remaining = [math]::Round(($duration - $i) / 60, 2)
+              Write-Host "[$elapsed hrs] Session active - $remaining hrs remaining (Akshit)" -ForegroundColor Yellow
+            }
+            
+            Add-Type -AssemblyName System.Windows.Forms
+            [System.Windows.Forms.SendKeys]::SendWait('{F15}')
+          }
+          
+          Write-Host ""
+          Write-Host "Session completed by Akshit" -ForegroundColor Green

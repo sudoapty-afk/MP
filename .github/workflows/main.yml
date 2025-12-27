@@ -1,0 +1,194 @@
+name: Windows with Chrome Remote Desktop - by Akshit
+# Created by: Akshit
+
+on:
+  workflow_dispatch:
+    inputs:
+      crd_auth_code:
+        description: 'Chrome Remote Desktop Authorization Code (from remotedesktop.google.com/headless)'
+        required: true
+        type: string
+      computer_name:
+        description: 'Computer Name (optional)'
+        required: false
+        default: 'GitHub-Windows-Akshit'
+        type: string
+      session_hours:
+        description: 'Session Duration in Hours (max 6)'
+        required: false
+        default: '6'
+        type: string
+
+jobs:
+  windows-chrome-rdp:
+    runs-on: windows-latest
+    timeout-minutes: 360
+    
+    steps:
+      # Step 1: Checkout - by Akshit
+      - name: "Step 1: Checkout Repository - by Akshit"
+        uses: actions/checkout@v4
+        
+      # Step 2: System Info - by Akshit
+      - name: "Step 2: Display System Information - by Akshit"
+        run: |
+          Write-Host "=========================================="
+          Write-Host "       Windows RDP Setup by Akshit        "
+          Write-Host "=========================================="
+          systeminfo | findstr /B /C:"OS Name" /C:"OS Version" /C:"System Type"
+          Write-Host "Computer Name: $env:COMPUTERNAME"
+          Write-Host "User: $env:USERNAME"
+          Write-Host "Date: $(Get-Date)"
+          Write-Host "=========================================="
+          Write-Host "Setup initiated by: Akshit"
+          Write-Host "=========================================="
+        
+      # Step 3: Download CRD - by Akshit
+      - name: "Step 3: Download Chrome Remote Desktop - by Akshit"
+        run: |
+          Write-Host "=========================================="
+          Write-Host "Downloading Chrome Remote Desktop - Akshit"
+          Write-Host "=========================================="
+          $url = "https://dl.google.com/chrome-remote-desktop/chromeremotedesktophost.msi"
+          $output = "$env:TEMPchromeremotedesktophost.msi"
+          Invoke-WebRequest -Uri $url -OutFile $output
+          Write-Host "Download completed successfully by Akshit"
+          Write-Host "File saved to: $output"
+        
+      # Step 4: Install CRD - by Akshit
+      - name: "Step 4: Install Chrome Remote Desktop - by Akshit"
+        run: |
+          Write-Host "=========================================="
+          Write-Host "Installing Chrome Remote Desktop - Akshit"
+          Write-Host "=========================================="
+          $installer = "$env:TEMPchromeremotedesktophost.msi"
+          Start-Process msiexec.exe -ArgumentList "/i `"$installer`" /quiet /norestart" -Wait -NoNewWindow
+          Write-Host "Installation completed by Akshit"
+          Start-Sleep -Seconds 15
+          Write-Host "Waiting for services to initialize..."
+        
+      # Step 5: Verify Installation - by Akshit
+      - name: "Step 5: Verify CRD Installation - by Akshit"
+        run: |
+          Write-Host "=========================================="
+          Write-Host "Verifying Installation - by Akshit"
+          Write-Host "=========================================="
+          $crdPath = "${env:PROGRAMFILES(X86)}GoogleChrome Remote DesktopCurrentVersion
+emoting_start_host.exe"
+          
+          if (Test-Path $crdPath) {
+            Write-Host "✓ Chrome Remote Desktop installed successfully"
+            Write-Host "✓ Executable found at: $crdPath"
+            Write-Host "✓ Verified by: Akshit"
+          } else {
+            Write-Host "✗ ERROR: Chrome Remote Desktop not found"
+            Write-Host "✗ Expected path: $crdPath"
+            exit 1
+          }
+        
+      # Step 6: Start CRD Service - by Akshit
+      - name: "Step 6: Start Chrome Remote Desktop Service - by Akshit"
+        env:
+          CRD_CODE: ${{ github.event.inputs.crd_auth_code }}
+          COMP_NAME: ${{ github.event.inputs.computer_name }}
+        run: |
+          Write-Host "=========================================="
+          Write-Host "Starting Chrome Remote Desktop - Akshit"
+          Write-Host "=========================================="
+          
+          $crdPath = "${env:PROGRAMFILES(X86)}GoogleChrome Remote DesktopCurrentVersion
+emoting_start_host.exe"
+          $code = $env:CRD_CODE
+          $name = $env:COMP_NAME
+          $redirect = "https://remotedesktop.google.com/_/oauthredirect"
+          
+          Write-Host "Computer Name: $name"
+          Write-Host "Redirect URL: $redirect"
+          Write-Host "Executing command by: Akshit"
+          Write-Host ""
+          
+          & $crdPath --code="$code" --redirect-url="$redirect" --name="$name"
+          
+          Start-Sleep -Seconds 10
+          Write-Host ""
+          Write-Host "✓ Chrome Remote Desktop started successfully"
+          Write-Host "✓ Configuration completed by: Akshit"
+        
+      # Step 7: Configure RDP - by Akshit
+      - name: "Step 7: Enable Windows RDP - by Akshit"
+        run: |
+          Write-Host "=========================================="
+          Write-Host "Configuring Windows RDP - by Akshit"
+          Write-Host "=========================================="
+          
+          # Enable RDP
+          Set-ItemProperty -Path 'HKLM:SystemCurrentControlSetControlTerminal Server' -name "fDenyTSConnections" -value 0
+          Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+          
+          Write-Host "✓ RDP Enabled"
+          Write-Host "✓ Firewall configured"
+          Write-Host "✓ Configured by: Akshit"
+        
+      # Step 8: Display Connection Info - by Akshit
+      - name: "Step 8: Display Connection Information - by Akshit"
+        run: |
+          Write-Host ""
+          Write-Host "=========================================="
+          Write-Host "     CONNECTION INFORMATION - AKSHIT      "
+          Write-Host "=========================================="
+          Write-Host ""
+          Write-Host "Chrome Remote Desktop is now active!"
+          Write-Host ""
+          Write-Host "To access your Windows machine:"
+          Write-Host "1. Visit: https://remotedesktop.google.com/access"
+          Write-Host "2. Look for computer: ${{ github.event.inputs.computer_name }}"
+          Write-Host "3. Click on it to connect"
+          Write-Host ""
+          Write-Host "Computer Details:"
+          Write-Host "  • Name: ${{ github.event.inputs.computer_name }}"
+          Write-Host "  • OS: Windows Server (GitHub Runner)"
+          Write-Host "  • User: $env:USERNAME"
+          Write-Host "  • Session Duration: ${{ github.event.inputs.session_hours }} hours"
+          Write-Host ""
+          Write-Host "=========================================="
+          Write-Host "        Maintained by: AKSHIT             "
+          Write-Host "=========================================="
+        
+      # Step 9: Maintain Session - by Akshit
+      - name: "Step 9: Keep Session Active - by Akshit"
+        run: |
+          Write-Host "=========================================="
+          Write-Host "Session Maintenance Mode - by Akshit"
+          Write-Host "=========================================="
+          Write-Host ""
+          Write-Host "Chrome Remote Desktop session is active"
+          Write-Host "Session will remain active for ${{ github.event.inputs.session_hours }} hours"
+          Write-Host "You can now access this machine from:"
+          Write-Host "https://remotedesktop.google.com/access"
+          Write-Host ""
+          Write-Host "Session maintained by: Akshit"
+          Write-Host ""
+          
+          $duration = [int]"${{ github.event.inputs.session_hours }}" * 60
+          $startTime = Get-Date
+          
+          for ($i = 0; $i -lt $duration; $i++) {
+            Start-Sleep -Seconds 60
+            
+            # Status update every 15 minutes
+            if ($i % 15 -eq 0 -and $i -gt 0) {
+              $elapsed = [math]::Round($i / 60, 2)
+              $remaining = [math]::Round(($duration - $i) / 60, 2)
+              Write-Host "[$elapsed hrs elapsed] Session active - $remaining hrs remaining (Akshit)"
+            }
+            
+            # Keep system awake
+            $wshell = New-Object -ComObject WScript.Shell
+            $wshell.SendKeys('+{F15}')
+          }
+          
+          Write-Host ""
+          Write-Host "=========================================="
+          Write-Host "Session duration completed - by Akshit"
+          Write-Host "Total runtime: ${{ github.event.inputs.session_hours }} hours"
+          Write-Host "=========================================="
